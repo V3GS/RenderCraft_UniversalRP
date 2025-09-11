@@ -15,7 +15,12 @@ public class OutputOutlineTexturesPass : ScriptableRenderPass
     private List<ShaderTagId> m_ShaderTagIdList = new List<ShaderTagId>();
 
     private const string k_NormalTextureName = "_NormalTexture";
+    private const string k_DepthTextureName = "_DepthTexture";
+    private const string k_ColorTextureName = "_ColorTexture";
+
     private RenderTextureDescriptor m_NormalTextureDescriptor;
+    private RenderTextureDescriptor m_DepthTextureDescriptor;
+    private RenderTextureDescriptor m_ColorTextureDescriptor;
 
     // This class stores the data needed by the RenderGraph pass.
     // It is passed as a parameter to the delegate function that executes the RenderGraph pass.
@@ -32,13 +37,14 @@ public class OutputOutlineTexturesPass : ScriptableRenderPass
         m_OutputOutlineMaterial = passSettings.outputOutlineMaterial;
 
         m_NormalTextureDescriptor = new RenderTextureDescriptor(Screen.width, Screen.height, RenderTextureFormat.Default, 0);
+        m_DepthTextureDescriptor = new RenderTextureDescriptor(Screen.width, Screen.height, RenderTextureFormat.Default, 0);
+        m_ColorTextureDescriptor = new RenderTextureDescriptor(Screen.width, Screen.height, RenderTextureFormat.Default, 0);
     }
 
-    private void InitRendererLists(ContextContainer frameData, ref PassData passData, RenderGraph renderGraph)
+    private void InitRendererLists(ContextContainer frameData, UniversalCameraData cameraData, ref PassData passData, RenderGraph renderGraph)
     {
         // Access the relevant frame data from the Universal Render Pipeline
         UniversalRenderingData universalRenderingData = frameData.Get<UniversalRenderingData>();
-        UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
         UniversalLightData lightData = frameData.Get<UniversalLightData>();
 
         SortingCriteria sortFlags = cameraData.defaultOpaqueSortFlags;
@@ -61,6 +67,13 @@ public class OutputOutlineTexturesPass : ScriptableRenderPass
         passData.rendererListHandle = renderGraph.CreateRendererList(param);
     }
 
+    private void CreateTextureDescriptor(UniversalCameraData cameraData, ref RenderTextureDescriptor descriptor)
+    {
+        descriptor.width = cameraData.cameraTargetDescriptor.width;
+        descriptor.height = cameraData.cameraTargetDescriptor.height;
+        descriptor.depthBufferBits = 0;
+    }
+
     // RecordRenderGraph is where the RenderGraph handle can be accessed, through which render passes can be added to the graph.
     // FrameData is a context container through which URP resources can be accessed and managed.
     public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
@@ -70,17 +83,24 @@ public class OutputOutlineTexturesPass : ScriptableRenderPass
             UniversalResourceData resourceData = frameData.Get<UniversalResourceData>();
             UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
 
-            // Set the normal texture size to be the same as the camera target size.
-            m_NormalTextureDescriptor.width = cameraData.cameraTargetDescriptor.width;
-            m_NormalTextureDescriptor.height = cameraData.cameraTargetDescriptor.height;
-            m_NormalTextureDescriptor.depthBufferBits = 0;
+            // Set the normal, depth, and color texture descriptor of the same size as the camera target.
+            CreateTextureDescriptor(cameraData, ref m_NormalTextureDescriptor);
+            CreateTextureDescriptor(cameraData, ref m_DepthTextureDescriptor);
+            CreateTextureDescriptor(cameraData, ref m_ColorTextureDescriptor);
 
+            // Create texture handles
             TextureHandle normalDestination = UniversalRenderer.CreateRenderGraphTexture(renderGraph, m_NormalTextureDescriptor, k_NormalTextureName, false);
+            TextureHandle depthDestination = UniversalRenderer.CreateRenderGraphTexture(renderGraph, m_DepthTextureDescriptor, k_DepthTextureName, false);
+            TextureHandle colorDestination = UniversalRenderer.CreateRenderGraphTexture(renderGraph, m_ColorTextureDescriptor, k_ColorTextureName, false);
 
-            InitRendererLists(frameData, ref passData, renderGraph);
+            InitRendererLists(frameData, cameraData, ref passData, renderGraph);
 
             builder.UseRendererList(passData.rendererListHandle);
+            
             builder.SetRenderAttachment(normalDestination, 0);
+            builder.SetRenderAttachment(depthDestination, 1);
+            builder.SetRenderAttachment(colorDestination, 2);
+
             builder.SetRenderAttachmentDepth(resourceData.activeDepthTexture, AccessFlags.Write);
 
             builder.SetRenderFunc((PassData data, RasterGraphContext context) => ExecutePass(data, context));

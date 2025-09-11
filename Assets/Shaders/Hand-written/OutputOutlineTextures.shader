@@ -2,8 +2,6 @@ Shader "V3GS/OutputOutlineTextures"
 {
     Properties
     {
-        [KeywordEnum(Normal, Depth, Color)]
-        _VisualizeOption ("Visualize option", Float) = 0
     }
     SubShader
     {
@@ -14,10 +12,6 @@ Shader "V3GS/OutputOutlineTextures"
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-
-            #pragma shader_feature _VISUALIZEOPTION_NORMAL
-            #pragma shader_feature _VISUALIZEOPTION_DEPTH
-            #pragma shader_feature _VISUALIZEOPTION_COLOR
 
             // The Core.hlsl file contains definitions of frequently used HLSL macros and functions
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
@@ -54,6 +48,14 @@ Shader "V3GS/OutputOutlineTextures"
                 return OUT;
             }
 
+             // MRT shader
+            struct FragmentOutput
+            {
+                half4 dest0 : SV_Target0;
+                half4 dest1 : SV_Target1;
+                half4 dest2 : SV_Target2;
+            };
+
             half4 GetDepth(float4 vertexPositionHCS)
             {
                 float2 UV = vertexPositionHCS.xy / _ScaledScreenParams.xy;
@@ -67,32 +69,21 @@ Shader "V3GS/OutputOutlineTextures"
                     depth = lerp(UNITY_NEAR_CLIP_VALUE, 1, SampleSceneDepth(UV));
                 #endif
 
-                return half4(depth, 0, 0, 1);
+                return half4(depth, depth, depth, 1);
             }
 
-            half4 frag (v2f IN) : SV_Target
+            FragmentOutput frag (v2f IN) : SV_Target
             {
                 UNITY_SETUP_INSTANCE_ID(IN);
 
-                half4 color = 0;
+                FragmentOutput output;
+                float2 uv = IN.vertexPositionHCS.xy / _ScaledScreenParams.xy;
 
-                // Visualize normals
-                #ifdef _VISUALIZEOPTION_NORMAL
-                    color.rgb = IN.normalWS * 0.5 + 0.5;
-                #endif
+                output.dest0 = half4(IN.normalWS * 0.5 + 0.5, 1.0);
+                output.dest1 = GetDepth(IN.vertexPositionHCS);
+                output.dest2 = half4(SampleSceneColor(uv), 1.0);
 
-                // Visualize depth
-                #ifdef _VISUALIZEOPTION_DEPTH
-                    color = GetDepth(IN.vertexPositionHCS);
-                #endif
-                
-                // Visualize color
-                #ifdef _VISUALIZEOPTION_COLOR
-                    float2 uv = IN.vertexPositionHCS.xy / _ScaledScreenParams.xy;
-                    color = half4(SampleSceneColor(uv), 1.0);
-                #endif
-
-                return color;
+                return output;
             }
             ENDHLSL
         }
