@@ -21,6 +21,26 @@ MonoBehaviour:
     layerMask:
       serializedVersion: 2
       m_Bits: 64
+--- !u!114 &-537925959756883215
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96fb33e727d6ba048af5f60f8ba632d1, type: 3}
+  m_Name: OutputOutlineTexturesRendererFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  m_passSettings:
+    isEnabled: 1
+    renderPassEvent: 600
+    outputOutlineMaterial: {fileID: 2100000, guid: 72e2f3380ebb28a45af8b5d95e3090af, type: 2}
+    layerMask:
+      serializedVersion: 2
+      m_Bits: 64
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -48,7 +68,8 @@ MonoBehaviour:
   m_RendererFeatures:
   - {fileID: 7833122117494664109}
   - {fileID: 5580054367504045895}
-  m_RendererFeatureMap: ad6b866f10d7b46c47177202e255704d
+  - {fileID: -537925959756883215}
+  m_RendererFeatureMap: ad6b866f10d7b46c47177202e255704df1da3a8d30e788f8
   m_UseNativeRenderPass: 1
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
@@ -107,7 +128,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7bf37d3c26967b446a911aad0a03d2c4, type: 3}
   m_Name: EdgeDetection
   m_EditorClassIdentifier: 
-  m_Active: 1
+  m_Active: 0
   settings:
     renderPassEvent: 500
     outlineThickness: 2
