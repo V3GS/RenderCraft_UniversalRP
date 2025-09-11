@@ -37,7 +37,6 @@ Shader "V3GS/OutputOutlineTextures"
             struct v2f
             {
                 float4  vertexPositionHCS   : SV_POSITION;
-                float2  uv                  : TEXCOORD0;
                 half3   normalWS            : TEXCOORD1;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
@@ -52,12 +51,12 @@ Shader "V3GS/OutputOutlineTextures"
                 // Transform normals to World-space
                 OUT.normalWS = TransformObjectToWorldNormal(IN.normalOS);
 
-                OUT.uv = OUT.vertexPositionHCS.xy / OUT.vertexPositionHCS.w;
-                OUT.uv = (OUT.uv * 0.5 + 0.5);
+                // OUT.uv = OUT.vertexPositionHCS.xy / OUT.vertexPositionHCS.w;
+                // OUT.uv = (OUT.uv * 0.5 + 0.5);
 
-                #ifdef UNITY_UV_STARTS_AT_TOP
-                    OUT.uv.y = 1 - OUT.uv.y;
-                #endif
+                // #ifdef UNITY_UV_STARTS_AT_TOP
+                //     OUT.uv.y = 1 - OUT.uv.y;
+                // #endif
 
                 return OUT;
             }
@@ -96,7 +95,8 @@ Shader "V3GS/OutputOutlineTextures"
                 
                 // Visualize color
                 #ifdef _VISUALIZEOPTION_COLOR
-                    color = half4(SampleSceneColor(IN.uv), 1.0);
+                    float2 uv = IN.vertexPositionHCS.xy / _ScaledScreenParams.xy;
+                    color = half4(SampleSceneColor(uv), 1.0);
                 #endif
 
                 return color;
