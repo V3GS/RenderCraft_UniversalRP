@@ -2,7 +2,7 @@ Shader "V3GS/OutputOutlineTextures"
 {
     Properties
     {
-        //_MainTex ("Texture", 2D) = "white" {}
+
     }
     SubShader
     {
@@ -14,44 +14,60 @@ Shader "V3GS/OutputOutlineTextures"
             #pragma vertex vert
             #pragma fragment frag
 
+            // The Core.hlsl file contains definitions of frequently used HLSL macros and functions
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            // The DeclareDepthTexture.hlsl file contains utilities for sampling the Camera depth texture.
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
 
             struct appdata
             {
                 float4  vertexPositionOS    : POSITION;
                 half3   normalOS            : NORMAL;
-                //float2 uv : TEXCOORD0;
             };
 
             struct v2f
             {
-                //float2 uv : TEXCOORD0;
                 float4  vertexPositionHCS   : SV_POSITION;
                 half3   normalWS            : TEXCOORD0;
             };
 
-            //sampler2D _MainTex;
-            //float4 _MainTex_ST;
-
             v2f vert (appdata IN)
             {
                 v2f OUT;
+                
                 OUT.vertexPositionHCS = TransformObjectToHClip(IN.vertexPositionOS);
                 // Transform normals to World-space
                 OUT.normalWS = TransformObjectToWorldNormal(IN.normalOS);
-                //OUT.uv = TRANSFORM_TEX(v.uv, _MainTex);
+
                 return OUT;
+            }
+
+            half4 GetDepth(float4 vertexPositionHCS)
+            {
+                float2 UV = vertexPositionHCS.xy / _ScaledScreenParams.xy;
+                real depth = 0.0;
+
+                // Sample the depth from the Camera depth texture.
+                #if UNITY_REVERSED_Z
+                    depth = SampleSceneDepth(UV);
+                #else
+                    // Adjust Z to match NDC for OpenGL ([-1, 1])
+                    depth = lerp(UNITY_NEAR_CLIP_VALUE, 1, SampleSceneDepth(UV));
+                #endif
+
+                return half4(depth, 0, 0, 1);
             }
 
             half4 frag (v2f IN) : SV_Target
             {
-                // sample the texture
-                //fixed4 col = tex2D(_MainTex, IN.uv);
-                //return col;
-
                 half4 color = 0;
 
-                color.rgb = IN.normalWS * 0.5 + 0.5;
+                // Visualize normals
+                //color.rgb = IN.normalWS * 0.5 + 0.5;
+
+                // Visualize depth
+                color = GetDepth(IN.vertexPositionHCS);
+
                 return color;
             }
             ENDHLSL
