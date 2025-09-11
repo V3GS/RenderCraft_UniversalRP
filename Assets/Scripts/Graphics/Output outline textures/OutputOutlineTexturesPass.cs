@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.RenderGraphModule;
+using UnityEngine.Rendering.RenderGraphModule.Util;
 using UnityEngine.Rendering.Universal;
 
 public class OutputOutlineTexturesPass : ScriptableRenderPass
@@ -12,6 +13,9 @@ public class OutputOutlineTexturesPass : ScriptableRenderPass
 
     private FilteringSettings m_FilteringSettings;
     private List<ShaderTagId> m_ShaderTagIdList = new List<ShaderTagId>();
+
+    private const string k_NormalTextureName = "_NormalTexture";
+    private RenderTextureDescriptor m_NormalTextureDescriptor;
 
     // This class stores the data needed by the RenderGraph pass.
     // It is passed as a parameter to the delegate function that executes the RenderGraph pass.
@@ -26,6 +30,8 @@ public class OutputOutlineTexturesPass : ScriptableRenderPass
 
         m_LayerMask = passSettings.layerMask;
         m_OutputOutlineMaterial = passSettings.outputOutlineMaterial;
+
+        m_NormalTextureDescriptor = new RenderTextureDescriptor(Screen.width, Screen.height, RenderTextureFormat.Default, 0);
     }
 
     private void InitRendererLists(ContextContainer frameData, ref PassData passData, RenderGraph renderGraph)
@@ -62,16 +68,22 @@ public class OutputOutlineTexturesPass : ScriptableRenderPass
         using (var builder = renderGraph.AddRasterRenderPass<PassData>(k_PassName, out var passData))
         {
             UniversalResourceData resourceData = frameData.Get<UniversalResourceData>();
+            UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
+
+            // Set the normal texture size to be the same as the camera target size.
+            m_NormalTextureDescriptor.width = cameraData.cameraTargetDescriptor.width;
+            m_NormalTextureDescriptor.height = cameraData.cameraTargetDescriptor.height;
+            m_NormalTextureDescriptor.depthBufferBits = 0;
+
+            TextureHandle normalDestination = UniversalRenderer.CreateRenderGraphTexture(renderGraph, m_NormalTextureDescriptor, k_NormalTextureName, false);
 
             InitRendererLists(frameData, ref passData, renderGraph);
 
             builder.UseRendererList(passData.rendererListHandle);
-            builder.SetRenderAttachment(resourceData.activeColorTexture, 0);
+            builder.SetRenderAttachment(normalDestination, 0);
             builder.SetRenderAttachmentDepth(resourceData.activeDepthTexture, AccessFlags.Write);
 
             builder.SetRenderFunc((PassData data, RasterGraphContext context) => ExecutePass(data, context));
-
-            //builder.SetRenderFunc<PassData>(ExecutePass);
         }
     }
 

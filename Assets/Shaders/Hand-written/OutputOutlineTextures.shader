@@ -51,13 +51,6 @@ Shader "V3GS/OutputOutlineTextures"
                 // Transform normals to World-space
                 OUT.normalWS = TransformObjectToWorldNormal(IN.normalOS);
 
-                // OUT.uv = OUT.vertexPositionHCS.xy / OUT.vertexPositionHCS.w;
-                // OUT.uv = (OUT.uv * 0.5 + 0.5);
-
-                // #ifdef UNITY_UV_STARTS_AT_TOP
-                //     OUT.uv.y = 1 - OUT.uv.y;
-                // #endif
-
                 return OUT;
             }
 
