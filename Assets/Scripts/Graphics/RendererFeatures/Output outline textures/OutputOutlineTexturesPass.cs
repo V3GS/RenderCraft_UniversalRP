@@ -118,7 +118,7 @@ public class OutputOutlineTexturesPass : ScriptableRenderPass
     static void ExecutePass(PassData data, RasterGraphContext context)
     {
         // Clear the render target to black
-        context.cmd.ClearRenderTarget(false, false, Color.black);
+        context.cmd.ClearRenderTarget(false, false, Color.clear);
 
         // Draw the objects in the list
         context.cmd.DrawRendererList(data.rendererListHandle);
