@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.RenderGraphModule;
-using UnityEngine.Rendering.RenderGraphModule.Util;
 using UnityEngine.Rendering.Universal;
 
 public class OutputOutlineTexturesPass : ScriptableRenderPass
@@ -21,6 +20,10 @@ public class OutputOutlineTexturesPass : ScriptableRenderPass
     private RenderTextureDescriptor m_NormalTextureDescriptor;
     private RenderTextureDescriptor m_DepthTextureDescriptor;
     private RenderTextureDescriptor m_ColorTextureDescriptor;
+
+    private int m_GlobalNormalTextureID = Shader.PropertyToID(k_NormalTextureName);
+    private int m_GlobalDepthTextureID = Shader.PropertyToID(k_DepthTextureName);
+    private int m_GlobalColorTextureID = Shader.PropertyToID(k_ColorTextureName);
 
     // This class stores the data needed by the RenderGraph pass.
     // It is passed as a parameter to the delegate function that executes the RenderGraph pass.
@@ -49,7 +52,7 @@ public class OutputOutlineTexturesPass : ScriptableRenderPass
 
         SortingCriteria sortFlags = cameraData.defaultOpaqueSortFlags;
         RenderQueueRange renderQueueRange = RenderQueueRange.opaque;
-        FilteringSettings filterSettings = new FilteringSettings(renderQueueRange, m_LayerMask);
+        m_FilteringSettings = new FilteringSettings(renderQueueRange, m_LayerMask);
 
         m_ShaderTagIdList.Clear();
 
@@ -63,7 +66,7 @@ public class OutputOutlineTexturesPass : ScriptableRenderPass
         // Add the override material to the drawing settings
         drawSettings.overrideMaterial = m_OutputOutlineMaterial;
 
-        var param = new RendererListParams(universalRenderingData.cullResults, drawSettings, filterSettings);
+        var param = new RendererListParams(universalRenderingData.cullResults, drawSettings, m_FilteringSettings);
         passData.rendererListHandle = renderGraph.CreateRendererList(param);
     }
 
@@ -102,6 +105,11 @@ public class OutputOutlineTexturesPass : ScriptableRenderPass
             builder.SetRenderAttachment(colorDestination, 2);
 
             builder.SetRenderAttachmentDepth(resourceData.activeDepthTexture, AccessFlags.Write);
+
+            // Make global the Normal, Depth, and Color textures
+            builder.SetGlobalTextureAfterPass(normalDestination, m_GlobalNormalTextureID);
+            builder.SetGlobalTextureAfterPass(depthDestination, m_GlobalDepthTextureID);
+            builder.SetGlobalTextureAfterPass(colorDestination, m_GlobalColorTextureID);
 
             builder.SetRenderFunc((PassData data, RasterGraphContext context) => ExecutePass(data, context));
         }

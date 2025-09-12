@@ -1,8 +1,5 @@
 Shader "V3GS/OutputOutlineTextures"
 {
-    Properties
-    {
-    }
     SubShader
     {
         Tags { "RenderType" = "Opaque" "RenderPipeline" = "UniversalPipeline" }

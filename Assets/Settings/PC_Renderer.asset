@@ -69,7 +69,8 @@ MonoBehaviour:
   - {fileID: 7833122117494664109}
   - {fileID: 5580054367504045895}
   - {fileID: -537925959756883215}
-  m_RendererFeatureMap: ad6b866f10d7b46c47177202e255704df1da3a8d30e788f8
+  - {fileID: 4964657383345239900}
+  m_RendererFeatureMap: ad6b866f10d7b46c47177202e255704df1da3a8d30e788f85c37d0159601e644
   m_UseNativeRenderPass: 1
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
@@ -116,6 +117,23 @@ MonoBehaviour:
     layerMask:
       serializedVersion: 2
       m_Bits: 64
+--- !u!114 &4964657383345239900
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6c54c74f6a1e2e4db93c47613b9e3cd, type: 3}
+  m_Name: OutlineRendererFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  m_passSettings:
+    isEnabled: 1
+    renderPassEvent: 600
+    blitMaterial: {fileID: 2100000, guid: b25d6a3e62bb11c4db4f650578156ad1, type: 2}
 --- !u!114 &5580054367504045895
 MonoBehaviour:
   m_ObjectHideFlags: 0
