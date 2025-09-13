@@ -10,6 +10,7 @@ Shader "V3GS/OutlineEffect"
         _Scale ("Scale", Range(0, 10)) = 1
         _DepthThreshold ("Depth threshold", Range(0, 100)) = 0.2
         _NormalThreshold ("Normal threshold", Range(0, 1)) = 0.2
+        _ColorThreshold ("Color threshold", Range(0, 1)) = 0.2
     }
    SubShader
    {
@@ -46,6 +47,7 @@ Shader "V3GS/OutlineEffect"
            float _Scale;
            float _DepthThreshold;
            float _NormalThreshold;
+           float _ColorThreshold;
 
            // Drawing outlines with depth
            float DepthOutline(float2 uvs[4])
@@ -55,10 +57,10 @@ Shader "V3GS/OutlineEffect"
                float depth2 = tex2D(_DepthTexture, uvs[2]).r;
                float depth3 = tex2D(_DepthTexture, uvs[3]).r;
 
-               float depthFiniteDifference0 = depth1 - depth0;
-               float depthFiniteDifference1 = depth3 - depth2;
+               float depthDifference0 = depth1 - depth0;
+               float depthDifference1 = depth3 - depth2;
 
-               float edgeDepth = sqrt(pow(depthFiniteDifference0, 2) + pow(depthFiniteDifference1, 2)) * 100;
+               float edgeDepth = sqrt(pow(depthDifference0, 2) + pow(depthDifference1, 2)) * 100;
                float depthThreshold = _DepthThreshold * depth0;
 
                edgeDepth = edgeDepth > depthThreshold ? 1 : 0;
@@ -74,13 +76,40 @@ Shader "V3GS/OutlineEffect"
                float3 normal2 = tex2D(_NormalTexture, uvs[2]).rgb;
                float3 normal3 = tex2D(_NormalTexture, uvs[3]).rgb;
 
-               float3 normalFiniteDifference0 = normal1 - normal0;
-               float3 normalFiniteDifference1 = normal3 - normal2;
+               float3 normalDifference0 = normal1 - normal0;
+               float3 normalDifference1 = normal3 - normal2;
 
-               float edgeNormal = sqrt(dot(normalFiniteDifference0, normalFiniteDifference0) + dot(normalFiniteDifference1, normalFiniteDifference1));
+               float edgeNormal = sqrt(dot(normalDifference0, normalDifference0) + dot(normalDifference1, normalDifference1));
                edgeNormal = edgeNormal > _NormalThreshold ? 1 : 0;
 
                return edgeNormal;
+           }
+
+           // Drawing outlines with color variance
+           float GetLuminance(float3 color)
+           {
+                return color.r * 0.3 + color.g * 0.59 + color.b * 0.11;
+           }
+           
+           float ColorOutline(float2 uvs[4])
+           {
+                float3 color0 = tex2D(_ColorTexture, uvs[0]).rgb;
+                float3 color1 = tex2D(_ColorTexture, uvs[1]).rgb;
+                float3 color2 = tex2D(_ColorTexture, uvs[2]).rgb;
+                float3 color3 = tex2D(_ColorTexture, uvs[3]).rgb;
+
+                float luminance0 = GetLuminance(color0);
+                float luminance1 = GetLuminance(color1);
+                float luminance2 = GetLuminance(color2);
+                float luminance3 = GetLuminance(color3);
+
+                const float colorDifference0 = luminance1 - luminance2;
+                const float colorDifference1 = luminance0 - luminance3;
+
+                float edgeColor = sqrt(dot(colorDifference0, colorDifference0) + dot(colorDifference1, colorDifference1));
+                edgeColor = edgeColor > _ColorThreshold ? 1 : 0;
+
+                return edgeColor;
            }
 
            float4 Frag(Varyings input) : SV_Target0
@@ -120,15 +149,17 @@ Shader "V3GS/OutlineEffect"
                #ifdef _VISUALIZEOPTION_OUTLINE
                     float edgeDepth = DepthOutline(uvs);
                     float edgeNormal = NormalsOutline(uvs);
-
-                    color = saturate(edgeDepth + edgeNormal);
+                    float edgeColor = ColorOutline(uvs);
+                    
+                    color = saturate(edgeDepth + edgeNormal + edgeColor);
                #endif
 
                #ifdef _VISUALIZEOPTION_OUTLINECOLOR
                     float edgeDepth = DepthOutline(uvs);
                     float edgeNormal = NormalsOutline(uvs);
+                    float edgeColor = ColorOutline(uvs);
 
-                    float edge = saturate(edgeDepth + edgeNormal);
+                    float edge = saturate(edgeDepth + edgeNormal + edgeColor);
                     color = lerp(color, _OutlineColor, edge);
                #endif
 
