@@ -14,7 +14,8 @@ Shader "V3GS/OutlineEffect"
    SubShader
    {
        Tags { "RenderType"="Opaque" "RenderPipeline" = "UniversalPipeline"}
-       ZWrite Off Cull Off
+       ZWrite Off
+       Cull Off
 
        Pass
        {
@@ -120,14 +121,15 @@ Shader "V3GS/OutlineEffect"
                     float edgeDepth = DepthOutline(uvs);
                     float edgeNormal = NormalsOutline(uvs);
 
-                    color = max(edgeDepth, edgeNormal);
+                    color = saturate(edgeDepth + edgeNormal);
                #endif
 
                #ifdef _VISUALIZEOPTION_OUTLINECOLOR
                     float edgeDepth = DepthOutline(uvs);
                     float edgeNormal = NormalsOutline(uvs);
 
-                    color = color + ( max(edgeDepth, edgeNormal) * _OutlineColor);
+                    float edge = saturate(edgeDepth + edgeNormal);
+                    color = lerp(color, _OutlineColor, edge);
                #endif
 
                return color;
