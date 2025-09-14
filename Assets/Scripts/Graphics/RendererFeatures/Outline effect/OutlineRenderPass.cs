@@ -15,10 +15,10 @@ public class OutlineRenderPass : ScriptableRenderPass
         public Material material;
     }
 
-    public OutlineRenderPass(OutlineRendererFeature.Settings settings)
+    public OutlineRenderPass(RenderPassEvent passRenderPassEvent, Material blitMaterial)
     {
-        renderPassEvent = settings.renderPassEvent;
-        m_BlitOutlineMaterial = settings.blitMaterial;
+        renderPassEvent = passRenderPassEvent;
+        m_BlitOutlineMaterial = blitMaterial;
 
         requiresIntermediateTexture = true;
     }

@@ -32,7 +32,7 @@ public class OutputOutlineTexturesPass : ScriptableRenderPass
         public RendererListHandle rendererListHandle;
     }
 
-    public OutputOutlineTexturesPass(OutputOutlineTexturesRendererFeature.Settings passSettings)
+    public OutputOutlineTexturesPass(OutlineRendererFeature.Settings passSettings)
     {
         renderPassEvent = passSettings.renderPassEvent;
 
