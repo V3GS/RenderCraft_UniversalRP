@@ -146,18 +146,22 @@ Shader "V3GS/OutlineEffect"
                uvs[2] = uv + float2(texelSize.x * halfScaleCeil, - texelSize.y * halfScaleFloor); // bottomRightUV
                uvs[3] = uv + float2(-texelSize.x * halfScaleFloor, texelSize.y * halfScaleCeil); // topLeftUV
 
+               float edgeDepth;
+               float edgeNormal;
+               float edgeColor;
+
                #ifdef _VISUALIZEOPTION_OUTLINE
-                    float edgeDepth = DepthOutline(uvs);
-                    float edgeNormal = NormalsOutline(uvs);
-                    float edgeColor = ColorOutline(uvs);
+                    edgeDepth = DepthOutline(uvs);
+                    edgeNormal = NormalsOutline(uvs);
+                    edgeColor = ColorOutline(uvs);
                     
                     color = saturate(edgeDepth + edgeNormal + edgeColor);
                #endif
 
                #ifdef _VISUALIZEOPTION_OUTLINECOLOR
-                    float edgeDepth = DepthOutline(uvs);
-                    float edgeNormal = NormalsOutline(uvs);
-                    float edgeColor = ColorOutline(uvs);
+                    edgeDepth = DepthOutline(uvs);
+                    edgeNormal = NormalsOutline(uvs);
+                    edgeColor = ColorOutline(uvs);
 
                     float edge = saturate(edgeDepth + edgeNormal + edgeColor);
                     color = lerp(color, _OutlineColor, edge);

@@ -26,9 +26,9 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
-    - _ColorThreshold: 0.5
-    - _DepthThreshold: 13.5
-    - _NormalThreshold: 0.337
+    - _ColorThreshold: 1
+    - _DepthThreshold: 67.8
+    - _NormalThreshold: 0.684
     - _Scale: 4.15
     - _VisualizeOption: 0
     m_Colors:
