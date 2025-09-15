@@ -41,21 +41,21 @@ Finally, the outline is multiplied by a color and blitted onto the scene color b
 ![Final composition](Images/03_finalcomposition.png)
 
 Files to take into account for achieving this:
-* C# file(s):
+* **C# file(s):**
     * Graphics:
         * RendererFeatures:
             * Outline effect:
-                * [OutlineRendererFeature](Assets/Scripts/Graphics/RendererFeatures/Outline effect/OutlineRendererFeature.cs): ScriptableRendererFeature that allows to configure the outline render passes, and defines their execution order.
+                * [OutlineRendererFeature](Assets/Scripts/Graphics/RendererFeatures/OutlineEffect/OutlineRendererFeature.cs): ScriptableRendererFeature that allows to configure the outline render passes, and defines their execution order.
 
-                * [OutputOutlineTexturesPass](Assets/Scripts/Graphics/RendererFeatures/Outline effect/OutputOutlineTexturesPass.cs):  Class that filters the object that will be affected by the outline effect, this is done via the `DrawRendererList` method.
+                * [OutputOutlineTexturesPass](Assets/Scripts/Graphics/RendererFeatures/OutlineEffect/OutputOutlineTexturesPass.cs):  Class that filters the object that will be affected by the outline effect, this is done via the `DrawRendererList` method.
                 Also, it generates the Normal, Depth, and Color buffers using Multiple Render Targets (`SetRenderAttachment`) and registers them globally (`SetGlobalTextureAfterPass`) for later access.
 
-                * [OutlineRenderPass](Assets/Scripts/Graphics/RendererFeatures/Outline effect/OutlineRenderPass.cs):  Class that retrieves the buffers, calculate the outline based on them, and Blit the result in the scene color.
+                * [OutlineRenderPass](Assets/Scripts/Graphics/RendererFeatures/OutlineEffect/OutlineRenderPass.cs):  Class that retrieves the buffers, calculate the outline based on them, and Blit the result in the scene color.
 
     * Behaviors:
         * [ChangeToLayer](Assets/Scripts/ChangeToLayer.cs): This behavior changes the `LayerMask` to *Outlined* when an object is selected.
         If the object is already in the *Outlined* layer mask, it changes its value to the *Default* layer.
-* Shader(s):
+* **Shader(s):**
     * Hand-written:
         * Outline:
             * [OutputOutlineTextures](Assets/Shaders/Hand-written/Outline/OutputOutlineTextures.shader): Shader that calculates and stores the normal, depth, and color in a set of RenderTextures.
@@ -63,18 +63,18 @@ Files to take into account for achieving this:
             For debugging purposes, there are a few shader variants  available to visualize the buffers and the outline result (`_VISUALIZEOPTION_OUTLINE`, `_VISUALIZEOPTION_NORMAL`, `_VISUALIZEOPTION_DEPTH`, `_VISUALIZEOPTION_COLOR`). You may remove them from your production build if they are not required.
             The `_VISUALIZEOPTION_OUTLINECOLOR` keyword defines the implementation where the outline is blended with the scene color. Make sure to use this shader variant or replicate the logic it contains.
 # How to use
-* _Step 1 — Define a new Layer Mask_
+* **_Step 1 — Define a new Layer Mask_**
 
     Go to Edit > Project Settings > Tags and Layers, then create a new layer named _*Outlined*_.
 
     ![Outline Rendere Feature](Images/layermask.png)
 
-* _Step 2 — Change layer mask in Runtime_
+* **_Step 2 — Change layer mask in Runtime_**
     Assign to a GameObject the _*ChangeToLayer*_ script and define the name of the layer that will be changed for.
 
     ![Change to layer](Images/changetolayer.png)
 
-* _Step 3 — Add and setup Renderer feature_
+* **_Step 3 — Add and setup Renderer feature_**
 
     In your Universal Renderer Data, you need to add the _*Outline Renderer Feature*_. Once it's added, you must configure its properties, specially the OutputOutlineMaterial (using the `OutputOutlineTextures` shader) and the Blit Material (using the `OutlineEffect` shader).
     
@@ -82,13 +82,13 @@ Files to take into account for achieving this:
 
     :information_source: At this point, you will be able to observe the outline effect. So, you have to tweaked the settings depending on your needs.
 
-* _Step 4 — Use the Volume framework_
+* **_Step 4 — Use the Volume framework_**
 
     To offer a better user experience, a custom volume component named _*Outline Volume Component*_ was developed. You can add it to your post-processing volume and configure it to fit your project.
 
    ![Volume component](Images/volumecomponent.png)
 
- :warning: Debugging options :warning:
+ ### :warning: **Debugging options** :warning:
 
 You can observe the input (Normal, Depth, Color) and out buffers (Outline, OutlineColor) by selecting the Material that uses the `OutlineEffect` and changing the Visualize option.
 That feature allows you to analyze how the buffers are defined.
