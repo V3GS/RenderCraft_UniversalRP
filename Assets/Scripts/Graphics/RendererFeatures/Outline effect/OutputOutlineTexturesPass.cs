@@ -32,9 +32,9 @@ public class OutputOutlineTexturesPass : ScriptableRenderPass
         public RendererListHandle rendererListHandle;
     }
 
-    public OutputOutlineTexturesPass(OutlineRendererFeature.Settings passSettings)
+    public OutputOutlineTexturesPass(RenderPassEvent passRenderPassEvent, OutlineRendererFeature.OutputOulineSettings passSettings)
     {
-        renderPassEvent = passSettings.renderPassEvent;
+        renderPassEvent = passRenderPassEvent;
 
         m_LayerMask = passSettings.layerMask;
         m_OutputOutlineMaterial = passSettings.outputOutlineMaterial;

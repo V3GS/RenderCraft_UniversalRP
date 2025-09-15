@@ -5,46 +5,61 @@ using UnityEngine.Rendering.RenderGraphModule;
 
 public class OutlineRendererFeature : ScriptableRendererFeature
 {
+    [SerializeField]
+    private bool m_IsEnabled = true;
+    [SerializeField]
+    private RenderPassEvent m_RenderPassEvent = RenderPassEvent.AfterRenderingPostProcessing;
+
     [System.Serializable]
-    public class Settings
+    public class OutputOulineSettings
     {
-        public bool isEnabled = true;
-        public RenderPassEvent renderPassEvent = RenderPassEvent.AfterRenderingPostProcessing;
-        
         // Material for generating the output buffers (Normal, Depth, and Color)
         public Material outputOutlineMaterial = null;
-        // Material that grabs the aforementioned buffers and performs the outline calculations
-        public Material blitMaterial = null;
 
         // Property that indicates the objects that will be affected by the outline effect
         public LayerMask layerMask;
     }
 
-    public Settings PassSettings
+    [System.Serializable]
+    public class OutlineSettings
     {
-        set { m_passSettings = value; }
-        get { return m_passSettings; }
+        // Material that grabs the aforementioned buffers and performs the outline calculations
+        public Material blitMaterial = null;
+
+        public Color outlineColor = Color.black;
+        public float scale = 4.15f;
+        public float depthThreshold = 13.5f;
+        public float normalThreshold = 0.337f;
+        public float colorThreshold = 0.5f;
+    }
+
+    public OutputOulineSettings OutputOutlineSettings
+    {
+        set { m_OutputOutlineSettings = value; }
+        get { return m_OutputOutlineSettings; }
     }
 
     [SerializeField]
-    private Settings m_passSettings = new Settings();
+    private OutputOulineSettings m_OutputOutlineSettings = new OutputOulineSettings();
+    [SerializeField]
+    private OutlineSettings m_OutlineSettings = new OutlineSettings();
 
     private OutputOutlineTexturesPass m_OutputOutlinePass;
     private OutlineRenderPass m_OutlinePass;
 
     public override void Create()
     {
-        m_OutputOutlinePass = new OutputOutlineTexturesPass(m_passSettings);
-        m_OutlinePass = new OutlineRenderPass(m_passSettings.renderPassEvent, m_passSettings.blitMaterial);
+        m_OutputOutlinePass = new OutputOutlineTexturesPass(m_RenderPassEvent, m_OutputOutlineSettings);
+        m_OutlinePass = new OutlineRenderPass(m_RenderPassEvent, m_OutlineSettings);
     }
 
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
         // If the pass is not enabled
-        if (!m_passSettings.isEnabled) return;
+        if (!m_IsEnabled) return;
 
         // If the Material is not correctly setup, it won't be enqueue the pass 
-        if (m_passSettings.outputOutlineMaterial == null)
+        if (m_OutputOutlineSettings.outputOutlineMaterial == null)
         {
             Debug.LogWarningFormat("Missing override material. {0} the example pass will not be executed. Check for missing reference in the assigned renderer.", GetType().Name);
             return;

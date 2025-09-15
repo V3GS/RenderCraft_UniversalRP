@@ -34,14 +34,20 @@ MonoBehaviour:
   m_Name: Outline Renderer Feature
   m_EditorClassIdentifier: 
   m_Active: 1
-  m_passSettings:
-    isEnabled: 1
-    renderPassEvent: 600
+  m_IsEnabled: 1
+  m_RenderPassEvent: 600
+  m_OutputOutlineSettings:
     outputOutlineMaterial: {fileID: 2100000, guid: 72e2f3380ebb28a45af8b5d95e3090af, type: 2}
-    blitMaterial: {fileID: 2100000, guid: b25d6a3e62bb11c4db4f650578156ad1, type: 2}
     layerMask:
       serializedVersion: 2
       m_Bits: 64
+  m_OutlineSettings:
+    blitMaterial: {fileID: 2100000, guid: b25d6a3e62bb11c4db4f650578156ad1, type: 2}
+    outlineColor: {r: 0, g: 0, b: 0, a: 1}
+    scale: 4.15
+    depthThreshold: 13.5
+    normalThreshold: 0.337
+    colorThreshold: 0.5
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0

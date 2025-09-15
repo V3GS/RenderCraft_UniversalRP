@@ -29,7 +29,7 @@ Material:
     - _ColorThreshold: 0.5
     - _DepthThreshold: 13.5
     - _NormalThreshold: 0.337
-    - _Scale: 4
+    - _Scale: 4.15
     - _VisualizeOption: 0
     m_Colors:
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
