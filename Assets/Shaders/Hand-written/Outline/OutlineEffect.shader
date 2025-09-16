@@ -2,10 +2,11 @@ Shader "V3GS/OutlineEffect"
 {
     Properties
     {
-        [KeywordEnum(OutlineColor, Outline, Normal, Depth, Color)]
+        [KeywordEnum(OutlineColor, Outline, Normal, Depth, Color, Mask)]
         _VisualizeOption ("Visualize option", Float) = 0
 
         _OutlineColor ("Outline Color", Color) = (1,1,1,1)
+        _HighlightColor ("Highlight Color", Color) = (1,1,1,1)
 
         _Scale ("Scale", Range(0, 10)) = 1
         _DepthThreshold ("Depth threshold", Range(0, 100)) = 0.2
@@ -36,13 +37,16 @@ Shader "V3GS/OutlineEffect"
            #pragma shader_feature _VISUALIZEOPTION_NORMAL
            #pragma shader_feature _VISUALIZEOPTION_DEPTH
            #pragma shader_feature _VISUALIZEOPTION_COLOR
+           #pragma shader_feature _VISUALIZEOPTION_MASK
 
            // These textures were generated in the "OutputOutlineTexturesRendererFeature"
            sampler2D _NormalTexture;
            sampler2D _DepthTexture;
            sampler2D _ColorTexture;
+           sampler2D _MaskTexture;
 
            float4 _OutlineColor;
+           float4 _HighlightColor;
 
            float _Scale;
            float _DepthThreshold;
@@ -123,6 +127,7 @@ Shader "V3GS/OutlineEffect"
                float4 normalBuffer = tex2D(_NormalTexture, uv);
                float4 depthBuffer = tex2D(_DepthTexture, uv);
                float4 colorBuffer = tex2D(_ColorTexture, uv);
+               float4 maskBuffer = tex2D(_MaskTexture, uv);
 
                #ifdef _VISUALIZEOPTION_NORMAL
                     color = normalBuffer;
@@ -134,6 +139,10 @@ Shader "V3GS/OutlineEffect"
 
                #ifdef _VISUALIZEOPTION_COLOR
                     color = colorBuffer;
+               #endif
+
+               #ifdef _VISUALIZEOPTION_MASK
+                    color = maskBuffer;
                #endif
 
                float halfScaleFloor = floor(_Scale * 0.5);
@@ -164,6 +173,8 @@ Shader "V3GS/OutlineEffect"
                     edgeColor = ColorOutline(uvs);
 
                     float edge = saturate(edgeDepth + edgeNormal + edgeColor);
+                    // It's added a highlight color. The color will be blended according to the alpha value of the highlight color
+                    color += lerp(color, maskBuffer * _HighlightColor, _HighlightColor.a);
                     color = lerp(color, _OutlineColor, edge);
                #endif
 

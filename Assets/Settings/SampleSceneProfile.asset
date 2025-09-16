@@ -91,6 +91,9 @@ MonoBehaviour:
   outlineColor:
     m_OverrideState: 1
     m_Value: {r: 0, g: 0, b: 0, a: 1}
+  highlightColor:
+    m_OverrideState: 1
+    m_Value: {r: 0, g: 0, b: 0, a: 0.4627451}
   scale:
     m_OverrideState: 1
     m_Value: 4.15

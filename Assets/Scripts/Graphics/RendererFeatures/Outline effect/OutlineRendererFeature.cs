@@ -27,6 +27,8 @@ public class OutlineRendererFeature : ScriptableRendererFeature
         public Material blitMaterial = null;
 
         public Color outlineColor = Color.black;
+        public Color hightlightColor = Color.black;
+
         public float scale = 4.15f;
         public float depthThreshold = 13.5f;
         public float normalThreshold = 0.337f;

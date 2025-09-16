@@ -44,6 +44,7 @@ MonoBehaviour:
   m_OutlineSettings:
     blitMaterial: {fileID: 2100000, guid: b25d6a3e62bb11c4db4f650578156ad1, type: 2}
     outlineColor: {r: 0, g: 0, b: 0, a: 1}
+    hightlightColor: {r: 0, g: 0, b: 0, a: 1}
     scale: 4.15
     depthThreshold: 13.5
     normalThreshold: 0.337

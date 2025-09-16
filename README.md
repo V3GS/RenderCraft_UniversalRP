@@ -22,7 +22,7 @@ This example shows how to filter a set of renderers based on the [layermask](htt
 
 This example uses the [RenderGraph API](https://docs.unity3d.com/6000.0/Documentation/Manual/urp/render-graph.html) to write a Scriptable Render Passes in the Universal Render Pipeline (URP). Taking advantage of this API, it was used the following features:
 - Filter objects by using the [DrawRendererListCommandBuffer.DrawRendererList](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/Rendering.CommandBuffer.DrawRendererList.html) method.
-- Multiple Render Targets (MRT) to store the Depth, Normals, and Color buffer.
+- Multiple Render Targets (MRT) to store the Depth, Normals, Color, and Mask buffer.
 - [Transfer a set of textures between render passes in URP](https://docs.unity3d.com/6000.0/Documentation/Manual/urp/render-graph-pass-textures-between-passes.html) to grab the aforementioned buffers to generate the outline effect.
 
 
@@ -30,13 +30,13 @@ By using this implementation, you can define a set of objects that you want to h
 
 ![Filter objects](Images/01_filter.png)
 
-Then, the [OutputOutlineTexturesPass](Assets\Scripts\Graphics\RendererFeatures\Outline effect\OutputOutlineTexturesPass.cs) will generate the Normal, Depth, and Color buffers. These buffers are necessary to perform the operations that calculate the surface outlines.
+Then, the [OutputOutlineTexturesPass](Assets\Scripts\Graphics\RendererFeatures\Outline effect\OutputOutlineTexturesPass.cs) will generate the Normal, Depth, Color, and Mask buffers. The Normal, Depth and Color buffers are necessary to perform the operations that calculate the surface outlines; The Mask buffer is necessary to highlight the objects filtered.
 
 In turn, the OutlineRenderPass will grab the aforementioned buffers to calculate the outline based on the [Roberts Cross Edge Detection](https://homepages.inf.ed.ac.uk/rbf/HIPR2/roberts.htm)
 
 ![Outline Rendere Feature](Images/02_outlinerenderefeature.png)
 
-Finally, the outline is multiplied by a color and blitted onto the scene color buffer.
+Finally, the outline is multiplied by a color and blitted onto the scene color buffer. Also, you can highlight the geometries.
 
 ![Final composition](Images/03_finalcomposition.png)
 
@@ -45,12 +45,12 @@ Files to take into account for achieving this:
     * Graphics:
         * RendererFeatures:
             * Outline effect:
-                * [OutlineRendererFeature](Assets/Scripts/Graphics/RendererFeatures/OutlineEffect/OutlineRendererFeature.cs): ScriptableRendererFeature that allows to configure the outline render passes, and defines their execution order.
+                * [OutlineRendererFeature](Assets/Scripts/Graphics/RendererFeatures/Outline effect/OutlineRendererFeature.cs): ScriptableRendererFeature that allows to configure the outline render passes, and defines their execution order.
 
-                * [OutputOutlineTexturesPass](Assets/Scripts/Graphics/RendererFeatures/OutlineEffect/OutputOutlineTexturesPass.cs):  Class that filters the object that will be affected by the outline effect, this is done via the `DrawRendererList` method.
+                * [OutputOutlineTexturesPass](Assets/Scripts/Graphics/RendererFeatures/Outline%20effect/OutputOutlineTexturesPass.cs):  Class that filters the object that will be affected by the outline effect, this is done via the `DrawRendererList` method.
                 Also, it generates the Normal, Depth, and Color buffers using Multiple Render Targets (`SetRenderAttachment`) and registers them globally (`SetGlobalTextureAfterPass`) for later access.
 
-                * [OutlineRenderPass](Assets/Scripts/Graphics/RendererFeatures/OutlineEffect/OutlineRenderPass.cs):  Class that retrieves the buffers, calculate the outline based on them, and Blit the result in the scene color.
+                * [OutlineRenderPass](Assets/Scripts/Graphics/RendererFeatures/Outline%20effect/OutlineRenderPass.cs):  Class that retrieves the buffers, calculate the outline based on them, and Blit the result in the scene color.
 
     * Behaviors:
         * [ChangeToLayer](Assets/Scripts/ChangeToLayer.cs): This behavior changes the `LayerMask` to *Outlined* when an object is selected.
@@ -60,7 +60,7 @@ Files to take into account for achieving this:
         * Outline:
             * [OutputOutlineTextures](Assets/Shaders/Hand-written/Outline/OutputOutlineTextures.shader): Shader that calculates and stores the normal, depth, and color in a set of RenderTextures.
             * [OutlineEffect](Assets/Shaders/Hand-written/Outline/OutlineEffect.shader): This shader is responsible for reading the normal, depth, and color buffers to calculate the outline.
-            For debugging purposes, there are a few shader variants  available to visualize the buffers and the outline result (`_VISUALIZEOPTION_OUTLINE`, `_VISUALIZEOPTION_NORMAL`, `_VISUALIZEOPTION_DEPTH`, `_VISUALIZEOPTION_COLOR`). You may remove them from your production build if they are not required.
+            For debugging purposes, there are a few shader variants  available to visualize the buffers and the outline result (`_VISUALIZEOPTION_OUTLINE`, `_VISUALIZEOPTION_NORMAL`, `_VISUALIZEOPTION_DEPTH`, `_VISUALIZEOPTION_COLOR`, `_VISUALIZEOPTION_MASK`). You may remove them from your production build if they are not required.
             The `_VISUALIZEOPTION_OUTLINECOLOR` keyword defines the implementation where the outline is blended with the scene color. Make sure to use this shader variant or replicate the logic it contains.
 # How to use
 * **_Step 1 — Define a new Layer Mask_**

@@ -48,9 +48,10 @@ Shader "V3GS/OutputOutlineTextures"
              // MRT shader
             struct FragmentOutput
             {
-                half4 dest0 : SV_Target0;
-                half4 dest1 : SV_Target1;
-                half4 dest2 : SV_Target2;
+                half4 dest0 : SV_Target0; // Normal
+                half4 dest1 : SV_Target1; // Depth
+                half4 dest2 : SV_Target2; // Color
+                half4 dest3 : SV_Target2; // Mask
             };
 
             half4 GetDepth(float4 vertexPositionHCS)
@@ -79,6 +80,7 @@ Shader "V3GS/OutputOutlineTextures"
                 output.dest0 = half4(IN.normalWS * 0.5 + 0.5, 1.0);
                 output.dest1 = GetDepth(IN.vertexPositionHCS);
                 output.dest2 = half4(SampleSceneColor(uv), 1.0);
+                output.dest3 = half4(1, 1, 1, 1);
 
                 return output;
             }

@@ -13,6 +13,7 @@ public class OutlineRenderPass : ScriptableRenderPass
     Material m_BlitOutlineMaterial = null;
 
     static readonly int m_OutlineColorId = Shader.PropertyToID("_OutlineColor");
+    static readonly int m_HighlightColorId = Shader.PropertyToID("_HighlightColor");
     static readonly int m_ScaleId = Shader.PropertyToID("_Scale");
     static readonly int m_DepthThresholdId = Shader.PropertyToID("_DepthThreshold");
     static readonly int m_NormalThresholdId = Shader.PropertyToID("_NormalThreshold");
@@ -20,6 +21,7 @@ public class OutlineRenderPass : ScriptableRenderPass
 
     // Shader data
     private Color m_OutlineColor = Color.black;
+    private Color m_HighlightColor = Color.black;
     private float m_Scale = 0.0f;
     private float m_DepthThreshold = 0.0f;
     private float m_NormalThreshold = 0.0f;
@@ -86,6 +88,7 @@ public class OutlineRenderPass : ScriptableRenderPass
         {
             // If override state, retrieve the information from the volume property,  else retrieve the information from the the Renderer Feature settings
             m_OutlineColor = m_VolumeComponent.outlineColor.overrideState ? m_VolumeComponent.outlineColor.value : m_OutlineSettings.outlineColor;
+            m_HighlightColor = m_VolumeComponent.highlightColor.overrideState ? m_VolumeComponent.highlightColor.value : m_OutlineSettings.hightlightColor;
 
             m_Scale = m_VolumeComponent.scale.overrideState ? m_VolumeComponent.scale.value : m_OutlineSettings.scale;
             m_DepthThreshold = m_VolumeComponent.depthThreshold.overrideState ? m_VolumeComponent.depthThreshold.value : m_OutlineSettings.depthThreshold;
@@ -96,6 +99,7 @@ public class OutlineRenderPass : ScriptableRenderPass
         else
         {
             m_OutlineColor = m_OutlineSettings.outlineColor;
+            m_HighlightColor = m_OutlineSettings.hightlightColor;
 
             m_Scale = m_OutlineSettings.scale;
             m_DepthThreshold = m_OutlineSettings.depthThreshold;
@@ -105,6 +109,7 @@ public class OutlineRenderPass : ScriptableRenderPass
 
         // Set any material properties based on our volume pass settings
         m_BlitOutlineMaterial.SetColor(m_OutlineColorId, m_OutlineColor);
+        m_BlitOutlineMaterial.SetColor(m_HighlightColorId, m_HighlightColor);
 
         m_BlitOutlineMaterial.SetFloat(m_ScaleId, m_Scale);
         m_BlitOutlineMaterial.SetFloat(m_DepthThresholdId, m_DepthThreshold);

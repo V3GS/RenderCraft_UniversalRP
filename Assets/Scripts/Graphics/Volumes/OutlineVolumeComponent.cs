@@ -10,6 +10,8 @@ public class OutlineVolumeComponent : VolumeComponent, IPostProcessComponent
 
     // Color parameters
     public ColorParameter outlineColor = new ColorParameter(Color.black);
+    // Highlight parameters
+    public ColorParameter highlightColor = new ColorParameter(Color.black);
 
     // Float parameters
     public ClampedFloatParameter scale = new ClampedFloatParameter(4.0f, 0.0f, 10.0f);
