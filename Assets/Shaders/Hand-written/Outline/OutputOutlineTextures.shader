@@ -48,13 +48,11 @@ Shader "V3GS/OutputOutlineTextures"
              // MRT shader
             struct FragmentOutput
             {
-                half4 dest0 : SV_Target0; // Normal
-                half4 dest1 : SV_Target1; // Depth
-                half4 dest2 : SV_Target2; // Color
-                half4 dest3 : SV_Target2; // Mask
+                half4 dest0 : SV_Target0; // RGB: Normal, A: Depth
+                half4 dest1 : SV_Target1; // RGB: Color, A: Mask
             };
 
-            half4 GetDepth(float4 vertexPositionHCS)
+            half GetDepth(float4 vertexPositionHCS)
             {
                 float2 UV = vertexPositionHCS.xy / _ScaledScreenParams.xy;
                 real depth = 0.0;
@@ -67,7 +65,7 @@ Shader "V3GS/OutputOutlineTextures"
                     depth = lerp(UNITY_NEAR_CLIP_VALUE, 1, SampleSceneDepth(UV));
                 #endif
 
-                return half4(depth, depth, depth, 1);
+                return depth;
             }
 
             FragmentOutput frag (v2f IN) : SV_Target
@@ -76,11 +74,12 @@ Shader "V3GS/OutputOutlineTextures"
 
                 FragmentOutput output;
                 float2 uv = IN.vertexPositionHCS.xy / _ScaledScreenParams.xy;
+                float depth = GetDepth(IN.vertexPositionHCS);
 
-                output.dest0 = half4(IN.normalWS * 0.5 + 0.5, 1.0);
-                output.dest1 = GetDepth(IN.vertexPositionHCS);
-                output.dest2 = half4(SampleSceneColor(uv), 1.0);
-                output.dest3 = half4(1, 1, 1, 1);
+                output.dest0 = half4(IN.normalWS * 0.5 + 0.5, depth);
+                // RGB: Stores the color information needed to calculate edges.
+                // A: Stores the mask, which is used to highlight specific objects.
+                output.dest1 = half4(SampleSceneColor(uv), 1.0);
 
                 return output;
             }

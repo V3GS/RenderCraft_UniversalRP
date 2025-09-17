@@ -40,10 +40,8 @@ Shader "V3GS/OutlineEffect"
            #pragma shader_feature _VISUALIZEOPTION_MASK
 
            // These textures were generated in the "OutputOutlineTexturesRendererFeature"
-           sampler2D _NormalTexture;
-           sampler2D _DepthTexture;
-           sampler2D _ColorTexture;
-           sampler2D _MaskTexture;
+           sampler2D _NormalDepthTexture;
+           sampler2D _ColorMaskTexture;
 
            float4 _OutlineColor;
            float4 _HighlightColor;
@@ -54,18 +52,13 @@ Shader "V3GS/OutlineEffect"
            float _ColorThreshold;
 
            // Drawing outlines with depth
-           float DepthOutline(float2 uvs[4])
+           float DepthOutline(float4 normalDepthSamples[4])
            {
-               float depth0 = tex2D(_DepthTexture, uvs[0]).r;
-               float depth1 = tex2D(_DepthTexture, uvs[1]).r;
-               float depth2 = tex2D(_DepthTexture, uvs[2]).r;
-               float depth3 = tex2D(_DepthTexture, uvs[3]).r;
-
-               float depthDifference0 = depth1 - depth0;
-               float depthDifference1 = depth3 - depth2;
+               float depthDifference0 = normalDepthSamples[1].a - normalDepthSamples[0].a;
+               float depthDifference1 = normalDepthSamples[3].a - normalDepthSamples[2].a;
 
                float edgeDepth = sqrt(pow(depthDifference0, 2) + pow(depthDifference1, 2)) * 100;
-               float depthThreshold = _DepthThreshold * depth0;
+               float depthThreshold = _DepthThreshold * normalDepthSamples[0].a;
 
                edgeDepth = edgeDepth > depthThreshold ? 1 : 0;
 
@@ -73,15 +66,10 @@ Shader "V3GS/OutlineEffect"
            }
 
            // Drawing outlines with normals
-           float NormalsOutline(float2 uvs[4])
+           float NormalsOutline(float4 normalDepthSamples[4])
            {
-               float3 normal0 = tex2D(_NormalTexture, uvs[0]).rgb;
-               float3 normal1 = tex2D(_NormalTexture, uvs[1]).rgb;
-               float3 normal2 = tex2D(_NormalTexture, uvs[2]).rgb;
-               float3 normal3 = tex2D(_NormalTexture, uvs[3]).rgb;
-
-               float3 normalDifference0 = normal1 - normal0;
-               float3 normalDifference1 = normal3 - normal2;
+               float3 normalDifference0 = normalDepthSamples[1].rgb - normalDepthSamples[0].rgb;
+               float3 normalDifference1 = normalDepthSamples[3].rgb - normalDepthSamples[2].rgb;
 
                float edgeNormal = sqrt(dot(normalDifference0, normalDifference0) + dot(normalDifference1, normalDifference1));
                edgeNormal = edgeNormal > _NormalThreshold ? 1 : 0;
@@ -95,17 +83,12 @@ Shader "V3GS/OutlineEffect"
                 return color.r * 0.3 + color.g * 0.59 + color.b * 0.11;
            }
            
-           float ColorOutline(float2 uvs[4])
+           float ColorOutline(float4 _ColorMaskTexture[4])
            {
-                float3 color0 = tex2D(_ColorTexture, uvs[0]).rgb;
-                float3 color1 = tex2D(_ColorTexture, uvs[1]).rgb;
-                float3 color2 = tex2D(_ColorTexture, uvs[2]).rgb;
-                float3 color3 = tex2D(_ColorTexture, uvs[3]).rgb;
-
-                float luminance0 = GetLuminance(color0);
-                float luminance1 = GetLuminance(color1);
-                float luminance2 = GetLuminance(color2);
-                float luminance3 = GetLuminance(color3);
+                float luminance0 = GetLuminance(_ColorMaskTexture[0].rgb);
+                float luminance1 = GetLuminance(_ColorMaskTexture[1].rgb);
+                float luminance2 = GetLuminance(_ColorMaskTexture[2].rgb);
+                float luminance3 = GetLuminance(_ColorMaskTexture[3].rgb);
 
                 const float colorDifference0 = luminance1 - luminance2;
                 const float colorDifference1 = luminance0 - luminance3;
@@ -124,25 +107,27 @@ Shader "V3GS/OutlineEffect"
                float2 uv = input.texcoord.xy;
                half4 color = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearRepeat, uv, _BlitMipLevel);
 
-               float4 normalBuffer = tex2D(_NormalTexture, uv);
-               float4 depthBuffer = tex2D(_DepthTexture, uv);
-               float4 colorBuffer = tex2D(_ColorTexture, uv);
-               float4 maskBuffer = tex2D(_MaskTexture, uv);
+               float4 normalDepthBuffer = tex2D(_NormalDepthTexture, uv);
+               float4 colorMaskBuffer = tex2D(_ColorMaskTexture, uv);
 
                #ifdef _VISUALIZEOPTION_NORMAL
-                    color = normalBuffer;
+                    // The RGB channels contains the normal buffer
+                    color = normalDepthBuffer;
                #endif
 
                #ifdef _VISUALIZEOPTION_DEPTH
-                    color = depthBuffer;
+                    // The alpha channel contains the depth buffer
+                    color = normalDepthBuffer.a;
                #endif
 
                #ifdef _VISUALIZEOPTION_COLOR
-                    color = colorBuffer;
+                    // The RGB channels contains the color buffer
+                    color = colorMaskBuffer;
                #endif
 
                #ifdef _VISUALIZEOPTION_MASK
-                    color = maskBuffer;
+                     // The alpha channel contains the mask buffer
+                    color = colorMaskBuffer.a;
                #endif
 
                float halfScaleFloor = floor(_Scale * 0.5);
@@ -155,26 +140,37 @@ Shader "V3GS/OutlineEffect"
                uvs[2] = uv + float2(texelSize.x * halfScaleCeil, - texelSize.y * halfScaleFloor); // bottomRightUV
                uvs[3] = uv + float2(-texelSize.x * halfScaleFloor, texelSize.y * halfScaleCeil); // topLeftUV
 
+               float4 normalDepthSamples[4];
+               float4 colorMaskSamples[4];
+
+               // The shader compiler will unroll this loop because it uses a fixed index.
+               // Therefore, it should not cause a performance impact.
+               for (int i = 0; i < 4; i++)
+               {
+                    normalDepthSamples[i] = tex2D(_NormalDepthTexture, uvs[i]);
+                    colorMaskSamples[i] = tex2D(_ColorMaskTexture, uvs[i]);
+               }
+
                float edgeDepth;
                float edgeNormal;
                float edgeColor;
 
                #ifdef _VISUALIZEOPTION_OUTLINE
-                    edgeDepth = DepthOutline(uvs);
-                    edgeNormal = NormalsOutline(uvs);
-                    edgeColor = ColorOutline(uvs);
+                    edgeDepth = DepthOutline(normalDepthSamples);
+                    edgeNormal = NormalsOutline(normalDepthSamples);
+                    edgeColor = ColorOutline(colorMaskSamples);
                     
                     color = saturate(edgeDepth + edgeNormal + edgeColor);
                #endif
 
                #ifdef _VISUALIZEOPTION_OUTLINECOLOR
-                    edgeDepth = DepthOutline(uvs);
-                    edgeNormal = NormalsOutline(uvs);
-                    edgeColor = ColorOutline(uvs);
+                    edgeDepth = DepthOutline(normalDepthSamples);
+                    edgeNormal = NormalsOutline(normalDepthSamples);
+                    edgeColor = ColorOutline(colorMaskSamples);
 
                     float edge = saturate(edgeDepth + edgeNormal + edgeColor);
                     // It's added a highlight color. The color will be blended according to the alpha value of the highlight color
-                    color += lerp(color, maskBuffer * _HighlightColor, _HighlightColor.a);
+                    color += lerp(color, colorMaskBuffer.a * _HighlightColor, _HighlightColor.a);
                     color = lerp(color, _OutlineColor, edge);
                #endif
 

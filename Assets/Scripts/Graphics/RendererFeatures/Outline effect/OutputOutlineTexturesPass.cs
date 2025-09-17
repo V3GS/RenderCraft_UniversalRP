@@ -13,20 +13,14 @@ public class OutputOutlineTexturesPass : ScriptableRenderPass
     private FilteringSettings m_FilteringSettings;
     private List<ShaderTagId> m_ShaderTagIdList = new List<ShaderTagId>();
 
-    private const string k_NormalTextureName = "_NormalTexture";
-    private const string k_DepthTextureName = "_DepthTexture";
-    private const string k_ColorTextureName = "_ColorTexture";
-    private const string k_MaskTextureName = "_MaskTexture";
+    private const string k_NormalDepthTextureName = "_NormalDepthTexture";
+    private const string k_ColorMaskTextureName = "_ColorMaskTexture";
 
-    private RenderTextureDescriptor m_NormalTextureDescriptor;
-    private RenderTextureDescriptor m_DepthTextureDescriptor;
-    private RenderTextureDescriptor m_ColorTextureDescriptor;
-    private RenderTextureDescriptor m_MaskTextureDescriptor;
+    private RenderTextureDescriptor m_NormalDepthTextureDescriptor;
+    private RenderTextureDescriptor m_ColorMaskTextureDescriptor;
 
-    private int m_GlobalNormalTextureID = Shader.PropertyToID(k_NormalTextureName);
-    private int m_GlobalDepthTextureID = Shader.PropertyToID(k_DepthTextureName);
-    private int m_GlobalColorTextureID = Shader.PropertyToID(k_ColorTextureName);
-    private int m_GlobalMaskTextureID = Shader.PropertyToID(k_MaskTextureName);
+    private int m_GlobalNormalDepthTextureID = Shader.PropertyToID(k_NormalDepthTextureName);
+    private int m_GlobalColorMaskTextureID = Shader.PropertyToID(k_ColorMaskTextureName);
 
     // This class stores the data needed by the RenderGraph pass.
     // It is passed as a parameter to the delegate function that executes the RenderGraph pass.
@@ -42,10 +36,8 @@ public class OutputOutlineTexturesPass : ScriptableRenderPass
         m_LayerMask = passSettings.layerMask;
         m_OutputOutlineMaterial = passSettings.outputOutlineMaterial;
 
-        m_NormalTextureDescriptor = new RenderTextureDescriptor(Screen.width, Screen.height, RenderTextureFormat.Default, 0);
-        m_DepthTextureDescriptor = new RenderTextureDescriptor(Screen.width, Screen.height, RenderTextureFormat.Default, 0);
-        m_ColorTextureDescriptor = new RenderTextureDescriptor(Screen.width, Screen.height, RenderTextureFormat.Default, 0);
-        m_MaskTextureDescriptor = new RenderTextureDescriptor(Screen.width, Screen.height, RenderTextureFormat.Default, 0);
+        m_NormalDepthTextureDescriptor = new RenderTextureDescriptor(Screen.width, Screen.height, RenderTextureFormat.Default, 0);
+        m_ColorMaskTextureDescriptor = new RenderTextureDescriptor(Screen.width, Screen.height, RenderTextureFormat.Default, 0);
     }
 
     private void InitRendererLists(ContextContainer frameData, UniversalCameraData cameraData, ref PassData passData, RenderGraph renderGraph)
@@ -91,33 +83,25 @@ public class OutputOutlineTexturesPass : ScriptableRenderPass
             UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
 
             // Set the normal, depth, and color texture descriptor of the same size as the camera target.
-            CreateTextureDescriptor(cameraData, ref m_NormalTextureDescriptor);
-            CreateTextureDescriptor(cameraData, ref m_DepthTextureDescriptor);
-            CreateTextureDescriptor(cameraData, ref m_ColorTextureDescriptor);
-            CreateTextureDescriptor(cameraData, ref m_MaskTextureDescriptor);
+            CreateTextureDescriptor(cameraData, ref m_NormalDepthTextureDescriptor);
+            CreateTextureDescriptor(cameraData, ref m_ColorMaskTextureDescriptor);
 
             // Create texture handles
-            TextureHandle normalDestination = UniversalRenderer.CreateRenderGraphTexture(renderGraph, m_NormalTextureDescriptor, k_NormalTextureName, false);
-            TextureHandle depthDestination = UniversalRenderer.CreateRenderGraphTexture(renderGraph, m_DepthTextureDescriptor, k_DepthTextureName, false);
-            TextureHandle colorDestination = UniversalRenderer.CreateRenderGraphTexture(renderGraph, m_ColorTextureDescriptor, k_ColorTextureName, false);
-            TextureHandle maskDestination = UniversalRenderer.CreateRenderGraphTexture(renderGraph, m_ColorTextureDescriptor, k_MaskTextureName, false);
+            TextureHandle normalDepthDestination = UniversalRenderer.CreateRenderGraphTexture(renderGraph, m_NormalDepthTextureDescriptor, k_NormalDepthTextureName, false);
+            TextureHandle colorMaskDestination = UniversalRenderer.CreateRenderGraphTexture(renderGraph, m_ColorMaskTextureDescriptor, k_ColorMaskTextureName, false);
 
             InitRendererLists(frameData, cameraData, ref passData, renderGraph);
 
             builder.UseRendererList(passData.rendererListHandle);
             
-            builder.SetRenderAttachment(normalDestination, 0);
-            builder.SetRenderAttachment(depthDestination, 1);
-            builder.SetRenderAttachment(colorDestination, 2);
-            builder.SetRenderAttachment(maskDestination, 3);
+            builder.SetRenderAttachment(normalDepthDestination, 0);
+            builder.SetRenderAttachment(colorMaskDestination, 1);
 
             builder.SetRenderAttachmentDepth(resourceData.activeDepthTexture, AccessFlags.Write);
 
             // Make global the Normal, Depth, and Color textures
-            builder.SetGlobalTextureAfterPass(normalDestination, m_GlobalNormalTextureID);
-            builder.SetGlobalTextureAfterPass(depthDestination, m_GlobalDepthTextureID);
-            builder.SetGlobalTextureAfterPass(colorDestination, m_GlobalColorTextureID);
-            builder.SetGlobalTextureAfterPass(maskDestination, m_GlobalMaskTextureID);
+            builder.SetGlobalTextureAfterPass(normalDepthDestination, m_GlobalNormalDepthTextureID);
+            builder.SetGlobalTextureAfterPass(colorMaskDestination, m_GlobalColorMaskTextureID);
 
             builder.SetRenderFunc((PassData data, RasterGraphContext context) => ExecutePass(data, context));
         }
